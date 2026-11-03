@@ -1,0 +1,22 @@
+{
+  "presets": [
+    {
+      "name": "Zoth Relay \u2014 Sovereign Zero-Trust Audit",
+      "description": "Deterministic high-throughput inspection preset for Zoth Relay engineered on ZothOS.",
+      "payload": "--repo zoth-relay --mode sovereign-audit --verify-checksum --strict",
+      "expected_metric": "99.98% deterministic pass rate (<4.2ms AST latency)"
+    },
+    {
+      "name": "Zoth Relay \u2014 A100 80GB Neural Stress Vector",
+      "description": "Multi-threaded benchmark payload synthesized for Zoth Relay pipeline verification.",
+      "payload": "--repo zoth-relay --benchmark --threads 16 --format json",
+      "expected_metric": "14,200 ops/sec sustained throughput"
+    },
+    {
+      "name": "Zoth Relay \u2014 Edge Production Hardening",
+      "description": "Pre-deployment production guardrail preset for Zoth Relay client-side & CLI parity.",
+      "payload": "zoth-relay-tui --benchmark --json",
+      "expected_metric": "Zero console errors \u2022 -14.0 LUFS \u2022 Triple-viewport verified"
+    }
+  ]
+}

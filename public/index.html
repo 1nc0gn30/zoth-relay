@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoth Relay v0.5.0 — Multi-Agent Local MCP/HTTP Bridge &amp; Command Sanitizer</title>
+  <meta name="description" content="Hardened local MCP/HTTP bridge on 127.0.0.1:8765 so multiple AI agents share one ZothOS machine with per-agent tokens, Landlock path sandboxes, 5-stage command blocklist, rate limits, and audit trail.">
+  <meta property="og:title" content="Zoth Relay v0.5.0 — Multi-Agent Local MCP/HTTP Bridge">
+  <meta property="og:description" content="Hardened local MCP/HTTP bridge with Landlock sandboxing, per-agent bearer tokens, and 5-stage shell command sanitizer.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zoth.nullai.tech/tools/zoth-relay">
+  <meta property="og:image" content="https://zoth.nullai.tech/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@1nc0gn30">
+  <meta name="twitter:creator" content="@1nc0gn30">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Zoth Relay (MCP Agent Bridge)",
+        "url": "https://zoth.nullai.tech/tools/zoth-relay",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "ZothOS Linux, Debian 13, Parrot OS",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "creator": {
+          "@type": "Organization",
+          "name": "1nc0gn30 • NullAI",
+          "url": "https://nullai.tech"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does Zoth Relay isolate multiple AI agents on one machine?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Zoth Relay enforces per-agent bearer tokens, Linux Landlock filesystem sandboxes, systemd NoNewPrivileges/ProtectSystem=strict isolation, per-minute rate limits, and a 5-stage shell command normaliser and blocklist on 127.0.0.1:8765."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Zoth Relay 100% free and open access?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Zoth Relay is 100% free and open-access with zero paywalls. Optional support is available via Stripe Buy Us a Coffee or Solana tips."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #07080D;
+      --bg-panel: #0E111B;
+      --bg-card: #131724;
+      --border: rgba(212, 175, 55, 0.26);
+      --gold: #D4AF37;
+      --emerald: #10B981;
+      --rose: #F43F5E;
+      --text: #F3F4F6;
+      --muted: #9CA3AF;
+    }
+    html[data-theme="light"] {
+      --bg: #F8F6F0;
+      --bg-panel: #FFFFFF;
+      --bg-card: #F3EFE6;
+      --border: rgba(146, 108, 21, 0.32);
+      --gold: #9A6B13;
+      --emerald: #047857;
+      --rose: #BE123C;
+      --text: #111827;
+      --muted: #4B5563;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .support-bar {
+      background: linear-gradient(90deg, rgba(16,185,129,0.14), rgba(212,175,55,0.16));
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+    }
+    .btn-gold { background: #D4AF37; color: #090A0F; }
+    .btn-sol { background: rgba(16,185,129,0.15); color: var(--emerald); border-color: rgba(16,185,129,0.4); }
+    .btn-outline { background: var(--bg-card); color: var(--text); border-color: var(--border); }
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+    .hero {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: ui-monospace, monospace;
+      background: rgba(212,175,55,0.14);
+      color: var(--gold);
+      border: 1px solid var(--border);
+    }
+    .badge-emerald {
+      background: rgba(16,185,129,0.14);
+      color: var(--emerald);
+      border-color: rgba(16,185,129,0.35);
+    }
+    h1 { font-size: clamp(1.4rem, 2.8vw, 2.1rem); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; max-width: 780px; line-height: 1.5; }
+    .main-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+      gap: 18px;
+    }
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      min-width: 0;
+    }
+    .panel-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      background: #080A10;
+      color: #34D399;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    pre.term {
+      background: #080A10;
+      color: #E5E7EB;
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 360px;
+    }
+    .profile-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .profile-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; margin-bottom: 4px; }
+    .profile-meta { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+    footer {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 640px) {
+      .support-bar { justify-content: center; text-align: center; }
+      .hero, .panel { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="support-bar">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="color:var(--emerald);font-weight:800;">✦ 100% FREE &amp; OPEN ACCESS · ZERO PAYWALLS</span>
+      <span style="color:var(--muted);">Zoth Relay Daemon (:8765) · /usr/local/bin/zoth-relay</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <a class="btn btn-gold" href="https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X" target="_blank" rel="noopener noreferrer">☕ Buy Us a Coffee (Stripe)</a>
+      <a class="btn btn-sol" href="solana:GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK" onclick="navigator.clipboard&&navigator.clipboard.writeText('GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK');this.textContent='✓ Copied GG2e...dXoK';return false;">◎ Solana Tip (GG2e...dXoK)</a>
+      <button id="themeToggleBtn" class="btn btn-outline" onclick="toggleLightDarkTheme()" aria-label="Toggle Light and Dark Theme">☀ Light / Dark</button>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <div class="badge-row">
+          <span class="badge badge-emerald">● LIVE BRIDGE :8765</span>
+          <span class="badge">LANDLOCK ABI SANDBOX</span>
+          <span class="badge">5-STAGE SHELL SANITIZER</span>
+          <span class="badge">MCP STREAMABLE HTTP + OPENAPI 3.1</span>
+        </div>
+        <h1>Zoth Relay (v0.5.0) — Multi-Agent Local MCP/HTTP Bridge</h1>
+        <p class="subtitle">
+          Hardened local MCP/HTTP bridge enabling multiple autonomous AI agents (Claude, AGY, Hermes, GPT-Actions, Zela Glasses) to share one ZothOS workstation with per-agent tokens, path sandboxes, command blocklists, rate limits, and immutable JSONL audit trails.
+        </p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="btn btn-gold" onclick="auditBatchCommands()">🛡️ Audit Command Batch</button>
+        <button class="btn btn-sol" onclick="showOpenApiSchema()">📜 Inspect OpenAPI 3.1 Actions</button>
+        <a class="btn btn-outline" href="http://127.0.0.1:8765/dashboard">Live :8765 Dashboard ↗</a>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <div class="panel">
+        <div class="panel-title">
+          <span>1. 5-Stage Shell Normaliser &amp; Command Blocklist</span>
+          <span class="badge badge-emerald" id="verdictBadge">3 EVALUATED · 2 BLOCKED</span>
+        </div>
+        <textarea id="cmdInput" aria-label="Shell commands to audit">git status && pytest -v
+sudo rm -rf --no-preserve-root /
+echo cm0gLXJmIC8= | base64 -d | bash
+dd if=/dev/zero of=/dev/nvme0n1 bs=1M
+python3 -m zoth_relay openapi</textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <button class="btn btn-gold" onclick="auditBatchCommands()">Run 5-Stage Sanitizer ⚡</button>
+          <button class="btn btn-sol" onclick="loadForkbombTest()">Load Forkbomb &amp; Wrapper Evasion Test</button>
+          <button class="btn btn-outline" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('sanitizerOut').textContent)">Copy Report</button>
+        </div>
+        <pre class="term" id="sanitizerOut"></pre>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>2. Landlock Agent Profiles &amp; Audit Telemetry</span>
+          <span class="badge" id="profileBadge">SYSTEMD + LANDLOCK</span>
+        </div>
+        <div class="profile-list">
+          <div class="profile-card">
+            <div class="profile-head"><span>agent: agy-dev (profile: dev)</span><span style="color:var(--emerald);">ACTIVE · 120 req/min</span></div>
+            <div class="profile-meta">allowed_dirs: [~/agent-workspace/project] · exec: ALLOWED · ports: 8000-8999</div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-head"><span>agent: claude-mcp (profile: read_only)</span><span style="color:var(--gold);">ACTIVE · 60 req/min</span></div>
+            <div class="profile-meta">allowed_dirs: [~/NullAITech] · exec: BLOCKED (read-only) · via: /mcp streamable-HTTP</div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-head"><span>agent: zela-glasses (profile: mobile)</span><span style="color:var(--emerald);">ACTIVE · 90 req/min</span></div>
+            <div class="profile-meta">allowed_dirs: [] · routes: /v1/ask, /v1/guide/stream (WebSocket + Kokoro TTS)</div>
+          </div>
+        </div>
+        <pre class="term" id="auditOut">{
+  "service": "zoth-relay.service",
+  "listen": "127.0.0.1:8765",
+  "systemd_hardening": {
+    "NoNewPrivileges": true,
+    "ProtectSystem": "strict",
+    "ProtectHome": "tmpfs",
+    "PrivateDevices": true,
+    "RestrictNamespaces": true,
+    "MemoryMax": "2G"
+  },
+  "endpoints": [
+    "GET  /health",
+    "POST /v1/exec/run",
+    "POST /v1/file",
+    "POST /v1/ask",
+    "WS   /v1/guide/stream",
+    "POST /mcp",
+    "GET  /openapi-actions.json"
+  ]
+}</pre>
+      </div>
+    </section>
+
+    <footer>
+      <div>Engineered by <strong>1nc0gn30 (@1nc0gn30) • NullAI Platform</strong></div>
+      <div style="display:flex;gap:14px;">
+        <a href="https://github.com/1nc0gn30/zoth-relay" style="color:var(--gold);text-decoration:none;">GitHub Repository</a>
+        <a href="https://nullai.tech" style="color:var(--emerald);text-decoration:none;">NullAI.tech</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const BANNED = new Set([
+      "shutdown","reboot","poweroff","halt","init","telinit","mkfs","mke2fs","mkswap",
+      "wipefs","fdisk","sfdisk","cfdisk","parted","gdisk","sgdisk","shred","blkdiscard",
+      "cryptsetup","sudo","su","doas","pkexec","passwd","useradd","userdel","insmod",
+      "rmmod","modprobe","kexec","crontab","systemctl","iptables","nft","ufw"
+    ]);
+    const WRAPPERS = new Set(["env","nohup","exec","command","nice","ionice","time","busybox","xargs","timeout","watch","eval"]);
+
+    function normaliseCmd(cmd) {
+      return cmd.replace(/\\\n/g, " ")
+        .replace(/\$\{?ifs\}?/gi, " ")
+        .replace(/['"\\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function evaluateSingle(cmd) {
+      const norm = normaliseCmd(cmd);
+      const compact = norm.replace(/\s+/g, "");
+      if (!norm) return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "empty command" };
+      if (/:\s*\(\s*\)\s*\{.*:\s*\|\s*:.*&.*\}/.test(norm) || compact.includes(":(){:|:&};:") || /(\w+)\s*\(\s*\)\s*\{[^}]*\b\1\s*\|\s*\1/.test(norm)) {
+        return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "fork bomb pattern" };
+      }
+      if (/>\s*\/dev\/(sd|nvme|hd|vd|mmcblk|loop)/.test(norm)) {
+        return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "redirect to a block device" };
+      }
+      if (/(base64\s+(-d|--decode)|xxd\s+-r).*\|\s*(ba|z|da|k)?sh\b/.test(norm)) {
+        return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "decoded payload piped to a shell" };
+      }
+      const segments = norm.split(/\|\||&&|[;&|\n()`{}]|\$\(/);
+      for (const seg of segments) {
+        const words = seg.trim().split(/\s+/).filter(Boolean);
+        let i = 0;
+        while (i < words.length && (/^[a-z_][a-z0-9_]*=/.test(words[i]) || WRAPPERS.has(words[i].split("/").pop()))) {
+          const base = words[i].split("/").pop();
+          i++;
+          if (WRAPPERS.has(base)) {
+            while (i < words.length && (words[i].startsWith("-") || /^[\d.]+[smhd]?$/.test(words[i]))) i++;
+          }
+        }
+        if (i >= words.length) continue;
+        const prog = words[i].split("/").pop();
+        const args = words.slice(i + 1);
+        if (BANNED.has(prog) || prog.startsWith("mkfs.") || prog.startsWith("fsck.")) {
+          return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "program '" + prog + "' is blocked" };
+        }
+        if (prog === "rm") {
+          if (args.includes("--no-preserve-root") || args.some(a => ["/", "/*", "~", "/etc", "/usr", "/home"].includes(a))) {
+            return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "recursive rm on a root/system/home path is blocked" };
+          }
+        }
+        if (prog === "dd" && args.some(a => a.startsWith("of=/dev/") && a !== "of=/dev/null")) {
+          return { command: cmd, normalised: norm, verdict: "BLOCKED", reason: "dd to a device is blocked" };
+        }
+      }
+      return { command: cmd, normalised: norm, verdict: "ALLOWED", reason: "Passed 5-stage shell normaliser, wrapper stripper, and blocklist check" };
+    }
+
+    function auditBatchCommands() {
+      const lines = document.getElementById("cmdInput").value.split("\n").map(l => l.trim()).filter(Boolean);
+      const results = lines.map(evaluateSingle);
+      const blocked = results.filter(r => r.verdict === "BLOCKED").length;
+      document.getElementById("verdictBadge").textContent = results.length + " EVALUATED · " + blocked + " BLOCKED";
+      document.getElementById("sanitizerOut").textContent = JSON.stringify({
+        engine: "zoth_relay.sanitizer (5-stage AST & wrapper stripper)",
+        total_evaluated: results.length,
+        blocked_count: blocked,
+        allowed_count: results.length - blocked,
+        results: results
+      }, null, 2);
+    }
+
+    function loadForkbombTest() {
+      document.getElementById("cmdInput").value = [
+        "FOO=1 timeout 5 busybox rm${IFS}-rf${IFS}/etc",
+        ":(){ :|:& };:",
+        "mkdir -p build/ && pytest -v",
+        "/sbin/mkfs.ext4 /dev/sda1"
+      ].join("\n");
+      auditBatchCommands();
+    }
+
+    function showOpenApiSchema() {
+      document.getElementById("profileBadge").textContent = "OPENAPI 3.1.0 SCHEMA";
+      document.getElementById("auditOut").textContent = JSON.stringify({
+        openapi: "3.1.0",
+        info: { title: "Zoth Relay Local Bridge", version: "0.5.0" },
+        servers: [{ url: "http://127.0.0.1:8765" }],
+        paths: {
+          "/v1/status": { get: { operationId: "getStatus", summary: "Agent sandbox & rate-limit status" } },
+          "/v1/file": { get: { operationId: "readFile" }, post: { operationId: "writeFile" } },
+          "/v1/dir": { get: { operationId: "listDir" } },
+          "/v1/exec/run": { post: { operationId: "runCommand", summary: "Execute sanitized command inside Landlock allowed_dir" } },
+          "/v1/ask": { post: { operationId: "ask", summary: "Multimodal vision & prompt relay" } }
+        }
+      }, null, 2);
+    }
+
+    function toggleLightDarkTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+      html.setAttribute("data-theme", next);
+    }
+
+    auditBatchCommands();
+  </script>
+  <script src="/assets/sovereign-upgrade.js" defer></script>
+</body>
+</html>
