@@ -301,7 +301,7 @@ class Conn:
                 continue
             temp = self.hub.temp_reader()
             if temp is not None and temp >= v.hot_c:
-                await self.send({"type": "state", "text": f"zoth-pill hot ({temp:.0f}°C): captions paused", "temp_c": temp})
+                await self.send({"type": "state", "text": f"zothos hot ({temp:.0f}°C): captions paused", "temp_c": temp})
                 await asyncio.sleep(10)
                 continue
             self.last_caption_at = time.monotonic()
@@ -313,7 +313,7 @@ class Conn:
                 r = await self.hub.ollama(body)
                 if r.status_code >= 400:
                     await self.send({"type": "error", "text": f"vision model error {r.status_code}"
-                                     + (f": run `ollama pull {v.model}` on zoth-pill" if r.status_code == 404 else "")})
+                                     + (f": run `ollama pull {v.model}` on zothos" if r.status_code == 404 else "")})
                     await asyncio.sleep(5)
                     continue
                 cap = sanitize_caption((r.json().get("message") or {}).get("content") or "")

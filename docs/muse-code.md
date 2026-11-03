@@ -1,6 +1,6 @@
 # Meta Muse Code (`muse` CLI / Muse-Code AppImage)
 
-## How Muse connects (zoth-pill)
+## How Muse connects (zothos)
 
 | What | Value |
 |---|---|

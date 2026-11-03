@@ -6,7 +6,7 @@ The Android apps talk to a **separate, user-level** zoth-relay instance that onl
 
 | | |
 |---|---|
-| URL (from the phone) | `http://100.106.132.5:8766` (zoth-pill's Tailscale IP) |
+| URL (from the phone) | `http://100.106.132.5:8766` (zothos's Tailscale IP) |
 | Local URL | `http://127.0.0.1:8766` |
 | Bound to | `127.0.0.1` and the Tailscale IP only (never `0.0.0.0`; LAN/Wi-Fi IPs refuse connections) |
 | Service | `systemctl --user status zoth-relay-mobile` (enabled, lingering, so it runs at boot) |
@@ -25,7 +25,7 @@ cleartext HTTP by default, so the apps need a `network_security_config` that per
 ## Pairing payload (QR)
 
 ```json
-{"v":1,"name":"zoth-pill","url":"http://100.106.132.5:8766","token":"zr_…","client":"pixel-mobile"}
+{"v":1,"name":"zothos","url":"http://100.106.132.5:8766","token":"zr_…","client":"pixel-mobile"}
 ```
 Scan, store `url` + `token` in EncryptedSharedPreferences, then call `GET /health` and `GET /v1/agents`.
 

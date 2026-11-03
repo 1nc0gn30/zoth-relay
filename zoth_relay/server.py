@@ -276,7 +276,7 @@ def create_app(cfg: Config | None = None, relay: Relay | None = None):
 
     @app.post("/v1/guide/admin/{action}", include_in_schema=False)
     async def guide_admin(request: Request, action: str):
-        # loopback only (the `zoth-guide up/down` launcher on zoth-pill); never reachable over Tailscale
+        # loopback only (the `zoth-guide up/down` launcher on zothos); never reachable over Tailscale
         if not is_local(request) or cfg.guide is None or action not in ("up", "down", "status", "metrics"):
             raise HTTPException(404, "not found")
         hub = hub_for(cfg.guide)

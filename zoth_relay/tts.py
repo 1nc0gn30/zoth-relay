@@ -1,4 +1,4 @@
-"""Local TTS on zoth-pill (CPU). Returns 16-bit mono PCM per sentence.
+"""Local TTS on zothos (CPU). Returns 16-bit mono PCM per sentence.
 
 kokoro (default): Kokoro-82M fp32 ONNX via kokoro-onnx, 24 kHz, best quality. Box benchmark at
   3 threads: ~0.3 s for a 2-word line, ~0.9 s for a 13-word sentence (RTF ~0.25). The int8 model

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# zoth-guide up|down|status|log — Zoth Guide "Local vision + AGY" on zoth-pill.
+# zoth-guide up|down|status|log — Zoth Guide "Local vision + AGY" on zothos.
 #   up    : start the mobile relay if needed, warm Ollama vision + local TTS, start the persistent
 #           AGY session, and open Konsole on a tmux session that shows AGY live.
 #   down  : stop the AGY session, unload the vision model, close the tmux/Konsole window.

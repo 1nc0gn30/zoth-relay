@@ -84,7 +84,7 @@ def sanitize_caption(text: str) -> str:
 class LocalVision:
     base_url: str = "http://127.0.0.1:11434"
     model: str = "moondream"
-    num_thread: int = 4            # of 12 logical CPUs on zoth-pill
+    num_thread: int = 4            # of 12 logical CPUs on zothos
     keep_alive: str = "10m"
     timeout: int = 40
     hot_c: float = 88.0            # pause captioning above this CPU package temp
@@ -291,7 +291,7 @@ class Guide:
             except httpx.HTTPError as e:
                 raise AskError(502, f"local vision (Ollama) unreachable: {type(e).__name__}")
             if r.status_code == 404:
-                raise AskError(503, f"Ollama model '{v.model}' not pulled. On zoth-pill run: ollama pull {v.model}")
+                raise AskError(503, f"Ollama model '{v.model}' not pulled. On zothos run: ollama pull {v.model}")
             if r.status_code >= 400:
                 raise AskError(502, f"Ollama returned {r.status_code}: {r.text[:200]}")
             cap = sanitize_caption((r.json().get("message") or {}).get("content") or "")
@@ -311,7 +311,7 @@ class Guide:
         a = self.cfg.agy
         exe = shutil.which(os.path.expanduser(a.command)) or shutil.which(os.path.expanduser("~/.local/bin/agy"))
         if not exe:
-            raise AskError(503, "AGY CLI not found on zoth-pill (expected ~/.local/bin/agy)")
+            raise AskError(503, "AGY CLI not found on zothos (expected ~/.local/bin/agy)")
         wd = os.path.expanduser(a.workdir)
         os.makedirs(wd, mode=0o700, exist_ok=True)
         args = [exe, "-p", prompt, "--output-format", "text", "--print-timeout", f"{a.timeout}s",

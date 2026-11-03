@@ -1,4 +1,4 @@
-# Append to ~/.config/zoth-relay/mobile/config.yaml on zoth-pill, then:
+# Append to ~/.config/zoth-relay/mobile/config.yaml on zothos, then:
 #   systemctl --user restart zoth-relay-mobile
 guide:
   max_tokens: 80
