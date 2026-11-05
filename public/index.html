@@ -435,6 +435,22 @@ python3 -m zoth_relay openapi</textarea>
 
     auditBatchCommands();
   </script>
-  <script src="/assets/sovereign-upgrade.js" defer></script>
+  
+
+  <script src="/sovereign_tutorial.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function() {
+      if (window.createSovereignTutorial) {
+        window.createSovereignTutorial({
+          toolId: "zoth-relay",
+          toolName: "Zoth Relay (MCP Agent Bridge)",
+          tagline: "High-speed WebSocket bridge connecting hardware and smart glasses to MCP tools!",
+          accentColor: "#3B82F6",
+          steps: [{"icon": "\ud83c\udf09", "title": "Bridging Hardware to AI", "desc": "Routes video, audio, and sensor streams from physical devices (smart glasses, phones) to AI inference servers."}, {"icon": "\u26a1", "title": "Sub-130ms Event Bus", "desc": "Ultra-low latency message transport ensures the AI can react to real-world physical events in real time."}, {"icon": "\ud83d\udd12", "title": "Local Cryptographic Security", "desc": "Hardware-backed AES-256 encryption protects every frame and command in transit."}]
+        });
+      }
+    });
+  </script>
+
 </body>
 </html>
