@@ -6,7 +6,7 @@ The Android apps talk to a **separate, user-level** zoth-relay instance that onl
 
 | | |
 |---|---|
-| URL (from the phone) | `http://100.106.132.5:8766` (zothos's Tailscale IP) |
+| URL (from the phone) | `http://100.64.0.10:8766` (RFC 6598 Tailscale IP placeholder) |
 | Local URL | `http://127.0.0.1:8766` |
 | Bound to | `127.0.0.1` and the Tailscale IP only (never `0.0.0.0`; LAN/Wi-Fi IPs refuse connections) |
 | Service | `systemctl --user status zoth-relay-mobile` (enabled, lingering, so it runs at boot) |
@@ -25,7 +25,7 @@ cleartext HTTP by default, so the apps need a `network_security_config` that per
 ## Pairing payload (QR)
 
 ```json
-{"v":1,"name":"zothos","url":"http://100.106.132.5:8766","token":"zr_…","client":"pixel-mobile"}
+{"v":1,"name":"zothos","url":"http://100.64.0.10:8766","token":"zr_…","client":"pixel-mobile"}
 ```
 Scan, store `url` + `token` in EncryptedSharedPreferences, then call `GET /health` and `GET /v1/agents`.
 
@@ -107,7 +107,7 @@ baked into the locked system instruction; voice = Gemini prebuilt voice name).
 ### Examples
 ```bash
 T=$(cat ~/.config/zoth-relay/pixel-mobile.token)
-curl -sN http://100.106.132.5:8766/v1/ask -H "Authorization: Bearer $T" -H 'Content-Type: application/json' \
+curl -sN http://100.64.0.10:8766/v1/ask -H "Authorization: Bearer $T" -H 'Content-Type: application/json' \
   -d "{\"agent\":\"grok\",\"prompt\":\"What am I looking at?\",\"image\":\"$(base64 -w0 frame.jpg)\"}"
 ```
 Kotlin (OkHttp): POST the JSON, then `response.body!!.source()` and `readUtf8Line()` in a loop,

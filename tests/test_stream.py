@@ -242,6 +242,6 @@ def test_tell_me_more_speaks_stored_context_instantly(stream_app):
 
 def test_admin_is_loopback_only(stream_app):
     make, _ = stream_app
-    with TestClient(make([]), base_url="http://100.106.132.5:8766") as c:
+    with TestClient(make([]), base_url="http://100.64.0.10:8766") as c:
         # TestClient's client host is "testclient", i.e. not loopback
         assert c.post("/v1/guide/admin/status").status_code == 404

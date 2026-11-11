@@ -5,9 +5,37 @@ import sys
 from pathlib import Path
 
 import pytest
+from contextlib import asynccontextmanager
 from fastapi.testclient import TestClient
-from mcp.shared.memory import create_connected_server_and_client_session
 from openapi_spec_validator import validate
+
+try:
+    from mcp.shared.memory import create_connected_server_and_client_session
+except ImportError:
+    import anyio
+    from mcp.client.session import ClientSession
+    from mcp.shared.memory import create_client_server_memory_streams
+
+    @asynccontextmanager
+    async def create_connected_server_and_client_session(server, raise_exceptions: bool = False):
+        async with create_client_server_memory_streams() as (client_streams, server_streams):
+            client_read, client_write = client_streams
+            server_read, server_write = server_streams
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(
+                    lambda: server.run(
+                        server_read,
+                        server_write,
+                        server.create_initialization_options(),
+                        raise_exceptions=raise_exceptions,
+                    )
+                )
+                try:
+                    async with ClientSession(client_read, client_write) as client_session:
+                        await client_session.initialize()
+                        yield client_session
+                finally:
+                    tg.cancel_scope.cancel()
 
 from zoth_relay.core import Relay
 from zoth_relay.mcp_server import build_mcp
@@ -137,6 +165,14 @@ def test_cli_add_list_revoke_rotate(client, env):
 
 
 # ------------------------------------------------------------- MCP
+def _mcp_is_error(r) -> bool:
+    return bool(getattr(r, "isError", getattr(r, "is_error", False)))
+
+
+def _mcp_structured(r):
+    return getattr(r, "structuredContent", getattr(r, "structured_content", None))
+
+
 async def test_mcp_in_process_tools(env):
     relay = Relay(env["cfg"])
     alpha = relay.registry.lookup(env["tok"]["alpha"])
@@ -145,18 +181,18 @@ async def test_mcp_in_process_tools(env):
         names = {t.name for t in (await s.list_tools()).tools}
         assert names == {"run_command", "read_file", "write_file", "list_dir", "status"}
         r = await s.call_tool("write_file", {"path": "m.txt", "content": "from-mcp"})
-        assert not r.isError
+        assert not _mcp_is_error(r)
         r = await s.call_tool("read_file", {"path": "m.txt"})
-        assert r.structuredContent["content"] == "from-mcp"
+        assert _mcp_structured(r)["content"] == "from-mcp"
         r = await s.call_tool("run_command", {"command": "cat m.txt"})
-        assert r.structuredContent["stdout"] == "from-mcp" and r.structuredContent["exit_code"] == 0
+        assert _mcp_structured(r)["stdout"] == "from-mcp" and _mcp_structured(r)["exit_code"] == 0
         r = await s.call_tool("list_dir", {})
-        assert "m.txt" in [e["name"] for e in r.structuredContent["entries"]]
+        assert "m.txt" in [e["name"] for e in _mcp_structured(r)["entries"]]
         r = await s.call_tool("status", {})
-        assert r.structuredContent["agent"] == "alpha"
+        assert _mcp_structured(r)["agent"] == "alpha"
         # scoping holds over MCP too
         r = await s.call_tool("read_file", {"path": str(env["ws"] / "beta" / "secret.txt")})
-        assert r.isError and "403" in r.content[0].text
+        assert _mcp_is_error(r) and "403" in r.content[0].text
     assert any(e.get("via") == "mcp" and e.get("agent") == "alpha" for e in audit(env))
 
 
@@ -165,7 +201,7 @@ async def test_mcp_read_only_agent_cannot_exec(env):
     srv = build_mcp(relay, relay.registry.lookup(env["tok"]["reader"]))
     async with create_connected_server_and_client_session(srv._mcp_server) as s:
         r = await s.call_tool("run_command", {"command": "echo hi"})
-        assert r.isError and "403" in r.content[0].text
+        assert _mcp_is_error(r) and "403" in r.content[0].text
 
 
 MCP_H = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}

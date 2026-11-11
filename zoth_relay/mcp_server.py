@@ -13,7 +13,41 @@ import json
 import os
 from typing import Any, Awaitable, Callable
 
-from mcp.server.fastmcp import Context, FastMCP
+try:
+    from mcp.server.fastmcp import Context, FastMCP
+    _ToolError: type[Exception] = ValueError
+except ImportError:
+    from mcp.server.mcpserver import Context, MCPServer as _MCPServer
+    from mcp.server.mcpserver.exceptions import ToolError as _ToolError
+
+    class FastMCP(_MCPServer):  # type: ignore[no-redef]
+        """Compatibility shim mapping MCP SDK 1.x FastMCP kwargs onto MCP SDK 2.x MCPServer."""
+
+        def __init__(
+            self,
+            name: str | None = None,
+            *,
+            instructions: str | None = None,
+            stateless_http: bool = False,
+            json_response: bool = False,
+            streamable_http_path: str = "/mcp",
+            transport_security: Any = None,
+            log_level: Any = "INFO",
+            **kwargs: Any,
+        ) -> None:
+            super().__init__(name=name, instructions=instructions, log_level=log_level, **kwargs)
+            self._compat_http_opts = {
+                "stateless_http": stateless_http,
+                "json_response": json_response,
+                "streamable_http_path": streamable_http_path,
+                "transport_security": transport_security,
+            }
+            self._mcp_server = self._lowlevel_server
+
+        def streamable_http_app(self, **kwargs: Any):
+            opts = {**self._compat_http_opts, **kwargs}
+            return super().streamable_http_app(**opts)
+
 from mcp.server.transport_security import TransportSecuritySettings
 
 from .config import Agent
@@ -24,7 +58,7 @@ INSTRUCTIONS = ("zoth-relay: sandboxed access to a ZOTHOS/Parrot Linux box. Path
 
 
 def _err(e: RelayError) -> Exception:
-    return ValueError(f"{e.status}: {e.detail}")
+    return _ToolError(f"{e.status}: {e.detail}")
 
 
 def _register(mcp: FastMCP, backend: Callable[[str, dict, Context | None], Awaitable[Any]]) -> None:
