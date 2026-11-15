@@ -18,7 +18,7 @@
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "SoftwareApplication",
+        "@type": ["WebApplication", "SoftwareApplication"],
         "name": "Zoth Relay (MCP Agent Bridge)",
         "url": "https://zoth.nullai.tech/tools/zoth-relay",
         "applicationCategory": "DeveloperApplication",
@@ -30,7 +30,7 @@
         },
         "creator": {
           "@type": "Organization",
-          "name": "1nc0gn30 • NullAI",
+          "name": "Neal Frazier Tech (@1nc0gn30) • NullAI Platform",
           "url": "https://nullai.tech"
         }
       },
@@ -50,7 +50,7 @@
             "name": "Is Zoth Relay 100% free and open access?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. Zoth Relay is 100% free and open-access with zero paywalls. Optional support is available via Stripe Buy Us a Coffee or Solana tips."
+              "text": "Yes. Zoth Relay is 100% free and open-access with zero paywalls. Optional support is available via Stripe Buy Us a Coffee (https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X) or Solana tips (GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK)."
             }
           }
         ]
@@ -223,14 +223,14 @@
   </style>
 </head>
 <body>
-  <div class="support-bar">
+  <div id="zoth-coffee-support-bar" class="support-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="color:var(--emerald);font-weight:800;">✦ 100% FREE &amp; OPEN ACCESS · ZERO PAYWALLS</span>
+      <span style="padding:5px 10px;border-radius:6px;background:#065F46;color:#FFFFFF;font-weight:800;">✦ 100% FREE &amp; OPEN ACCESS · ZERO PAYWALLS</span>
       <span style="color:var(--muted);">Zoth Relay Daemon (:8765) · /usr/local/bin/zoth-relay</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <a class="btn btn-gold" href="https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X" target="_blank" rel="noopener noreferrer">☕ Buy Us a Coffee (Stripe)</a>
-      <a class="btn btn-sol" href="solana:GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK" onclick="navigator.clipboard&&navigator.clipboard.writeText('GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK');this.textContent='✓ Copied GG2e...dXoK';return false;">◎ Solana Tip (GG2e...dXoK)</a>
+      <a class="btn btn-gold" style="background:#D4AF37;color:#08080B;" href="https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X" target="_blank" rel="noopener noreferrer">☕ Buy Us a Coffee (Stripe)</a>
+      <button type="button" class="btn" style="background:#047857;color:#FFFFFF;border:1px solid rgba(255,255,255,0.2);" onclick="navigator.clipboard&&navigator.clipboard.writeText('GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK');this.textContent='✓ Copied GG2e...dXoK';">◎ Solana Tip (GG2e...dXoK)</button>
       <button id="themeToggleBtn" class="btn btn-outline" onclick="toggleLightDarkTheme()" aria-label="Toggle Light and Dark Theme">☀ Light / Dark</button>
     </div>
   </div>
@@ -319,7 +319,7 @@ python3 -m zoth_relay openapi</textarea>
     </section>
 
     <footer>
-      <div>Engineered by <strong>1nc0gn30 (@1nc0gn30) • NullAI Platform</strong></div>
+      <div>Engineered by <strong>Neal Frazier Tech (@1nc0gn30) • NullAI Platform</strong></div>
       <div style="display:flex;gap:14px;">
         <a href="https://github.com/1nc0gn30/zoth-relay" style="color:var(--gold);text-decoration:none;">GitHub Repository</a>
         <a href="https://nullai.tech" style="color:var(--emerald);text-decoration:none;">NullAI.tech</a>
@@ -452,5 +452,6 @@ python3 -m zoth_relay openapi</textarea>
     });
   </script>
 
+  <script src="/assets/sovereign-upgrade.js" defer></script>
 </body>
 </html>

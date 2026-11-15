@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import contextlib
 import json
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import time
@@ -337,6 +338,30 @@ def create_app(cfg: Config | None = None, relay: Relay | None = None):
         if not is_local(request):
             raise HTTPException(404, "not found")
         return relay.dashboard_data(agent, client_ip(request))
+
+    public_dir = (Path(__file__).resolve().parent.parent / "public").resolve()
+
+    @app.get("/", include_in_schema=False)
+    @app.get("/index.html", include_in_schema=False)
+    async def workstation_index():
+        target = public_dir / "index.html"
+        if not target.is_file():
+            raise HTTPException(404, "not found")
+        return FileResponse(target, media_type="text/html; charset=utf-8")
+
+    @app.get("/sovereign_tutorial.js", include_in_schema=False)
+    async def workstation_tutorial():
+        target = public_dir / "sovereign_tutorial.js"
+        if not target.is_file():
+            raise HTTPException(404, "not found")
+        return FileResponse(target, media_type="application/javascript; charset=utf-8")
+
+    @app.get("/assets/{asset_path:path}", include_in_schema=False)
+    async def workstation_asset(asset_path: str):
+        target = (public_dir / "assets" / asset_path).resolve()
+        if not str(target).startswith(str((public_dir / "assets").resolve()) + "/") or not target.is_file():
+            raise HTTPException(404, "not found")
+        return FileResponse(target)
 
     @app.get("/health", include_in_schema=False)
     @app.get("/healthz", include_in_schema=False)
