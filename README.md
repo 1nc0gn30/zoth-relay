@@ -111,3 +111,24 @@ Client configuration guides:
 - **Support**: [Buy Us a Coffee via Stripe](https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X) · **Solana Tip Address**: `GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK`
 
 Engineered by **Neal Frazier Tech (@1nc0gn30)** ([GitHub (zoth-relay)](https://github.com/1nc0gn30/zoth-relay)) · [NullAI Platform](https://nullai.tech) · [Zoth Studio](https://zoth.nullai.tech)
+
+## Sovereign Surfaces
+
+_Machine-generated surface inventory (docs/tools/layerD_probe.py). Do not hand-edit; re-run the probe instead.
+
+**What it does.** Zoth Relay (MCP Agent Bridge) — Zoth Relay (MCP Agent Bridge) (v0.5.0) — Hardened local MCP/HTTP bridge so many AI agents share one ZothOS machine with per-agent tokens, path sandbox, command blocklist, rate limits, and audit trail on 127.0.0.1:8765.
+
+**Category.** Swarm & Core  ·  **Version.** 0.5.0  ·  **Execution type.** `local_cli`
+
+**Architecture & port.** Canonical source: `~/NullAITech/zoth-relay`. Assigned `localPort` **8765** (`http://127.0.0.1:8765`).
+
+**ZothOS CLI usage.**
+
+```bash
+zoth-relay --help     # exit 0
+zoth-relay --json     # exit 0
+```
+
+**Zoth Studio route.** https://zoth.nullai.tech/tools/zoth-relay
+
+_Verified 2026-11-15 across the three install surfaces (`/usr/local/bin`, `~/.local/bin`, `zoth-os/config/includes.chroot/usr/local/bin`)._
