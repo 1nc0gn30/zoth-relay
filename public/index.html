@@ -231,7 +231,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <a class="btn btn-gold" style="background:#D4AF37;color:#08080B;" href="https://buy.stripe.com/3cIfZg27PdKo2D64Ocfw40X" target="_blank" rel="noopener noreferrer">☕ Buy Us a Coffee (Stripe)</a>
-      <button type="button" class="btn" style="background:#047857;color:#FFFFFF;border:1px solid rgba(255,255,255,0.2);" onclick="navigator.clipboard&&navigator.clipboard.writeText('GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK');this.textContent='✓ Copied GG2e...dXoK';">◎ Solana Tip (GG2e...dXoK)</button>
+      <button type="button" class="btn" style="background:#047857;color:#FFFFFF;border:1px solid rgba(255,255,255,0.2);" onclick="navigator.clipboard&&navigator.clipboard.writeText('GG2eQbVh8ut1BK6j1A2tz7pSySdLpD38BgyEhGcxdXoK').catch(function(){});this.textContent='✓ Copied GG2e...dXoK';">◎ Solana Tip (GG2e...dXoK)</button>
       <button id="themeToggleBtn" class="btn btn-outline" onclick="toggleLightDarkTheme()" aria-label="Toggle Light and Dark Theme">☀ Light / Dark</button>
     </div>
   </div>
@@ -271,7 +271,7 @@ python3 -m zoth_relay openapi</textarea>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
           <button class="btn btn-gold" onclick="auditBatchCommands()">Run 5-Stage Sanitizer ⚡</button>
           <button class="btn btn-sol" onclick="loadForkbombTest()">Load Forkbomb &amp; Wrapper Evasion Test</button>
-          <button class="btn btn-outline" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('sanitizerOut').textContent)">Copy Report</button>
+          <button class="btn btn-outline" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('sanitizerOut').textContent).catch(function(){});this.textContent='✓ Copied Report';">Copy Report</button>
         </div>
         <pre class="term" id="sanitizerOut"></pre>
       </div>
